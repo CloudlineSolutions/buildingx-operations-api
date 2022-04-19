@@ -24,7 +24,7 @@ type SBLocationAttributes struct {
 	Description string `json:"description"`
 }
 
-func GetLocations(jwt, partitionID string) ([]Location, error) {
+func GetLocations(session Session) ([]Location, error) {
 
 	locations := make([]Location, 0)
 
@@ -35,8 +35,8 @@ func GetLocations(jwt, partitionID string) ([]Location, error) {
 	}
 
 	req := APIRequest{
-		Partition: partitionID,
-		JWT:       jwt,
+		Partition: session.Partition,
+		JWT:       session.JWT,
 		Path:      "locations?filter[type]=Building",
 		Operation: GET,
 	}

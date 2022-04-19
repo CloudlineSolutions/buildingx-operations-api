@@ -18,18 +18,17 @@ func TestGetLocations(t *testing.T) {
 	if partitionID == "" {
 		t.Fatal("unable to find partition ID in environment variable")
 	}
-	jwt, err := GetToken()
+	session := Session{}
+	err := session.Initialize(partitionID)
 	if err != nil {
-		t.Fatal("test failed while getting jwt: ", err.Error())
+		t.Fatal("test failed while initializing session: ", err.Error())
 	}
 
-	t.Run("get-locations", func(t *testing.T) {
+	t.Run("get-locations-with-valid-partition", func(t *testing.T) {
 
-		locations, err := GetLocations(jwt, partitionID)
-		if err != nil {
-			t.Fatal("error while retrieving locations: ", err.Error())
-		}
-		assert.GreaterOrEqual(t, 1, len(locations))
+		assert.GreaterOrEqual(t, 1, len(session.Locations))
 	})
+
+	//TODO: add test for invalid partition
 
 }
