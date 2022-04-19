@@ -23,7 +23,7 @@ func TestGetLocations(t *testing.T) {
 		t.Fatal("test failed while getting jwt: ", err.Error())
 	}
 
-	t.Run("with-valid-subscription", func(t *testing.T) {
+	t.Run("get-locations", func(t *testing.T) {
 
 		locations, err := GetLocations(jwt, partitionID)
 		if err != nil {

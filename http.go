@@ -11,11 +11,19 @@ import (
 	"time"
 )
 
+type Verb string
+
+const (
+	GET   Verb = "GET"
+	POST  Verb = "POST"
+	PATCH Verb = "PATCH"
+)
+
 type APIRequest struct {
 	Partition string
 	JWT       string
 	Path      string
-	Verb      string
+	Operation Verb
 	Body      bytes.Reader
 }
 
@@ -31,7 +39,7 @@ func MakeRESTCall(apiReq APIRequest) ([]byte, error) {
 	url := fmt.Sprintf("%s/operations/partitions/%s/%s", endpoint, apiReq.Partition, apiReq.Path)
 	auth := fmt.Sprintf("Bearer %s", apiReq.JWT)
 	client := &http.Client{Timeout: time.Duration(20) * time.Second}
-	req, _ := http.NewRequest(apiReq.Verb, url, &apiReq.Body)
+	req, _ := http.NewRequest(string(apiReq.Operation), url, &apiReq.Body)
 	req.Header.Add("accept", "application/json")
 	req.Header.Add("content-type", "application/json")
 	req.Header.Add("Authorization", auth)

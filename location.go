@@ -38,7 +38,7 @@ func GetLocations(jwt, partitionID string) ([]Location, error) {
 		Partition: partitionID,
 		JWT:       jwt,
 		Path:      "locations?filter[type]=Building",
-		Verb:      "GET",
+		Operation: GET,
 	}
 	resp, err := MakeRESTCall(req)
 	if err != nil {
