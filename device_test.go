@@ -83,6 +83,10 @@ func TestGetDevicesByGateway(t *testing.T) {
 		}
 	}
 
+	if gatewayID == "" {
+		t.Fatal("could not find a valid gateway in the device collection")
+	}
+
 	// get all of the devices associated with a location
 	t.Run("get-devices-with-valid-gateway-id", func(t *testing.T) {
 		devices, err := GetDevicesByGateway(&session, gatewayID)

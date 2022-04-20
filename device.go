@@ -208,6 +208,9 @@ func parseDevicesJSON(payload []byte) ([]Device, error) {
 			}
 
 		}
+		if device.OnlineStatus == "" {
+			device.OnlineStatus = "Unknown"
+		}
 		devices = append(devices, device)
 
 	}
