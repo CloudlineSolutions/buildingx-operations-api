@@ -66,7 +66,7 @@ type SBDeviceIncludedRelationshipsData struct {
 	Type string `json:"type"`
 }
 
-// GetLocations returns an array of devices that are associated with a particular location
+// returns an array of devices that are associated with a particular location
 func GetDevicesByLocation(session *Session, locationID string) ([]Device, error) {
 
 	devices := make([]Device, 0)
@@ -97,16 +97,93 @@ func GetDevicesByLocation(session *Session, locationID string) ([]Device, error)
 		return devices, errors.New("error making REST call: " + err.Error())
 	}
 
+	return parseDevicesJSON(resp)
+
+}
+
+// returns an array of devices that are associated with a particular gateway
+func GetDevicesByGateway(session *Session, gatewayID string) ([]Device, error) {
+
+	devices := make([]Device, 0)
+
+	// make sure session is initialized
+	if !session.IsInitialized {
+		return devices, errors.New("session is not initialized")
+	}
+
+	// make sure you have the required environment variable
+	endpoint := os.Getenv("BUILDINGX_ENDPOINT")
+	if endpoint == "" {
+		return devices, errors.New("missing buildingx api endpoint")
+	}
+
+	// create the API request
+	path := fmt.Sprintf("devices/%s/devices?include=hasFeatures.DeviceInfo", gatewayID)
+	req := APIRequest{
+		Partition: session.Partition,
+		JWT:       session.JWT,
+		Path:      path,
+		Operation: GET,
+	}
+
+	// make the API call
+	resp, err := MakeRESTCall(req)
+	if err != nil {
+		return devices, errors.New("error making REST call: " + err.Error())
+	}
+
+	return parseDevicesJSON(resp)
+
+}
+
+// returns an array of devices that are associated with the partition
+func GetAllDevices(session *Session) ([]Device, error) {
+
+	devices := make([]Device, 0)
+
+	// make sure session is initialized
+	if !session.IsInitialized {
+		return devices, errors.New("session is not initialized")
+	}
+
+	// make sure you have the required environment variable
+	endpoint := os.Getenv("BUILDINGX_ENDPOINT")
+	if endpoint == "" {
+		return devices, errors.New("missing buildingx api endpoint")
+	}
+
+	// create the API request
+	path := fmt.Sprintf("devices?include=hasFeatures.DeviceInfo,hasFeatures.Connectivity")
+	req := APIRequest{
+		Partition: session.Partition,
+		JWT:       session.JWT,
+		Path:      path,
+		Operation: GET,
+	}
+
+	// make the API call
+	resp, err := MakeRESTCall(req)
+	if err != nil {
+		return devices, errors.New("error making REST call: " + err.Error())
+	}
+
+	return parseDevicesJSON(resp)
+
+}
+func parseDevicesJSON(payload []byte) ([]Device, error) {
+
+	devices := make([]Device, 0)
+
 	// Unmarshal the native devices response payload
 	sbDevicesResponse := SBDevicesResponse{}
-	if err := json.Unmarshal(resp, &sbDevicesResponse); err != nil {
-		return devices, errors.New("Error parsing API response. String submitted: " + string(resp))
+	if err := json.Unmarshal(payload, &sbDevicesResponse); err != nil {
+		return devices, errors.New("Error parsing API response. String submitted: " + string(payload))
 	}
 
 	// Now unmarshal the device features nodes
 	sbDevicesIncludedResponse := SBDevicesIncludedResponse{}
-	if err := json.Unmarshal(resp, &sbDevicesIncludedResponse); err != nil {
-		return devices, errors.New("Error parsing API response (features section). String submitted: " + string(resp))
+	if err := json.Unmarshal(payload, &sbDevicesIncludedResponse); err != nil {
+		return devices, errors.New("Error parsing API response (features section). String submitted: " + string(payload))
 	}
 
 	// now create the Location objects
@@ -117,8 +194,9 @@ func GetDevicesByLocation(session *Session, locationID string) ([]Device, error)
 			Model:  sbDevice.Attributes.ModelName,
 			Serial: sbDevice.Attributes.SerialNumber,
 		}
-		// loop through the device features to populate the rest of the properties
+		// loop through the device features to populate the rest of the properties on the Device
 		for _, sbFeature := range sbDevicesIncludedResponse.Included {
+			// there are two kinds of devices features: DeviceInfo and Connectivity. Get the desired properties from each.
 			if sbFeature.RelationShips.HasDevice.Data.ID == device.ID {
 				if strings.ToLower(sbFeature.Type) == "deviceinfo" {
 					device.Name = sbFeature.Attributes.Name
