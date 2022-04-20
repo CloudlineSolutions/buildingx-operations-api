@@ -44,14 +44,17 @@ func MakeRESTCall(apiReq APIRequest) ([]byte, error) {
 	req.Header.Add("content-type", "application/json")
 	req.Header.Add("Authorization", auth)
 
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		return result, fmt.Errorf("unexpected error while invoking http client: %s", err.Error())
+	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		var data map[string]interface{}
 		decoder := json.NewDecoder(resp.Body)
 		err := decoder.Decode(&data)
 		if err == nil {
-			return result, errors.New("error message from BuildingX: " + data["detail"].(string))
+			return result, fmt.Errorf("error message from BuildingX: %s", data["detail"].(string))
 		}
 		return result, errors.New("got non-200 response from BuildingX API with no additional information")
 

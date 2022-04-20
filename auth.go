@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -62,7 +63,11 @@ func GetToken() (string, error) {
 	req.Header.Add("accept", "application/json")
 	req.Header.Add("content-type", "application/json")
 
-	resp, _ := client.Do(req)
+	//TODO: Replace this code with a call to the standard http method
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("unexpected error while invoking http client: %s", err.Error())
+	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		var data map[string]interface{}

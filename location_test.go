@@ -18,6 +18,8 @@ func TestGetLocations(t *testing.T) {
 	if partitionID == "" {
 		t.Fatal("unable to find partition ID in environment variable")
 	}
+
+	// locations are loaded during session initialization so thats all we need to do
 	session := Session{}
 	err := session.Initialize(partitionID)
 	if err != nil {
@@ -26,6 +28,7 @@ func TestGetLocations(t *testing.T) {
 
 	t.Run("get-locations-with-valid-partition", func(t *testing.T) {
 
+		// we expect that there is at least one location
 		assert.GreaterOrEqual(t, 1, len(session.Locations))
 	})
 
