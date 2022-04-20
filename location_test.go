@@ -27,11 +27,11 @@ func TestGetLocations(t *testing.T) {
 	}
 
 	t.Run("get-locations-with-valid-partition", func(t *testing.T) {
-
 		// we expect that there is at least one location
 		assert.GreaterOrEqual(t, 1, len(session.Locations))
 	})
 
 	//TODO: add test for invalid partition
+	//TODO test for invalid credentials
 
 }

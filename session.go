@@ -11,13 +11,13 @@ type Session struct {
 func (t *Session) Initialize(partition string) error {
 
 	if partition == "" {
-		t.Destroy()
+		t.Invalidate()
 		return errors.New("partition cannot be empty")
 	}
 
 	token, err := GetToken()
 	if err != nil {
-		t.Destroy()
+		t.Invalidate()
 		return errors.New("error while getting token: " + err.Error())
 	}
 	t.JWT = token
@@ -26,7 +26,7 @@ func (t *Session) Initialize(partition string) error {
 	// get locations associated with this partition
 	locations, err := GetLocations(*t)
 	if err != nil {
-		t.Destroy()
+		t.Invalidate()
 		return errors.New("error getting locations for this partition: " + err.Error())
 	}
 
@@ -34,7 +34,7 @@ func (t *Session) Initialize(partition string) error {
 
 	return nil
 }
-func (t *Session) Destroy() {
+func (t *Session) Invalidate() {
 
 	t.Partition = ""
 	t.JWT = ""

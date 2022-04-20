@@ -10,6 +10,7 @@ type Location struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	TimeZone    string `json:"timeZone"`
 }
 type SBLocationResponse struct {
 	Locations []SBLocation `json:"data"`
@@ -56,13 +57,17 @@ func GetLocations(session Session) ([]Location, error) {
 	for _, sbLocation := range sbLocationResponse.Locations {
 
 		location := Location{
-			ID:   sbLocation.ID,
-			Name: sbLocation.Attributes.Label,
+			ID:          sbLocation.ID,
+			Name:        sbLocation.Attributes.Label,
+			Description: sbLocation.Attributes.Description,
+			TimeZone:    sbLocation.Attributes.TimeZone,
 		}
 		locations = append(locations, location)
 
 	}
 
 	return locations, nil
+	//TODO: Add coordinates
+	//TODO: Add address
 
 }
