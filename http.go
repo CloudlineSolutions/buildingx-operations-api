@@ -26,7 +26,18 @@ type APIRequest struct {
 	Operation Verb
 	Body      bytes.Reader
 }
+type SBResponse struct {
+	Errors []SBErrorResponse `json:"errors"`
+}
+type SBErrorResponse struct {
+	ID     string `json:"id"`
+	Code   string `json:"code"`
+	Status string `json:"status"`
+	Title  string `json:"title"`
+	Detail string `json:"detail"`
+}
 
+// MakeRESTCall encapsulates a REST API call and returns the results of the call
 func MakeRESTCall(apiReq APIRequest) ([]byte, error) {
 
 	result := make([]byte, 0)
@@ -49,17 +60,27 @@ func MakeRESTCall(apiReq APIRequest) ([]byte, error) {
 		return result, fmt.Errorf("unexpected error while invoking http client: %s", err.Error())
 	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != 200 {
-		var data map[string]interface{}
-		decoder := json.NewDecoder(resp.Body)
-		err := decoder.Decode(&data)
-		if err == nil {
-			return result, fmt.Errorf("error message from BuildingX: %s", data["detail"].(string))
+		// attempt to parse the error response message
+		errorResponse, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return result, fmt.Errorf("unexpected error trying to read API error response message: %s", err.Error())
 		}
-		return result, errors.New("got non-200 response from BuildingX API with no additional information")
+		sbResponse := SBResponse{}
+		if err := json.Unmarshal(errorResponse, &sbResponse); err != nil {
+			return result, fmt.Errorf("Error parsing API response: %s", err.Error())
+		}
+		if len(sbResponse.Errors) < 1 {
+			return result, fmt.Errorf("the building x API returned a status code of %s but no error message was included", resp.Status)
+		}
+
+		// the error response message was successfully parsed, so use it to construct an error message
+		return result, fmt.Errorf("the building x API returned a status code of %s and an error detail message as follows: %s", sbResponse.Errors[0].Status, sbResponse.Errors[0].Detail)
 
 	}
 
+	//all is well, return the response payload
 	return ioutil.ReadAll(resp.Body)
 
 }

@@ -3,11 +3,12 @@ package buildingx
 import "errors"
 
 type Session struct {
-	Partition string
-	JWT       string
-	Locations []Location
+	IsInitialized bool
+	Partition     string
+	JWT           string
 }
 
+// Initialize valides the API credentials and gets an array of all available locations
 func (t *Session) Initialize(partition string) error {
 
 	if partition == "" {
@@ -20,24 +21,19 @@ func (t *Session) Initialize(partition string) error {
 		t.Invalidate()
 		return errors.New("error while getting token: " + err.Error())
 	}
+
+	t.IsInitialized = true
 	t.JWT = token
 	t.Partition = partition
 
-	// get locations associated with this partition
-	locations, err := GetLocations(*t)
-	if err != nil {
-		t.Invalidate()
-		return errors.New("error getting locations for this partition: " + err.Error())
-	}
-
-	t.Locations = locations
-
 	return nil
 }
+
+// Invalidate resets all session properties
 func (t *Session) Invalidate() {
 
+	t.IsInitialized = false
 	t.Partition = ""
 	t.JWT = ""
-	t.Locations = nil
 
 }
