@@ -220,49 +220,73 @@ func parseDevicesJSON(payload []byte) ([]Device, error) {
 
 }
 
-// func GetSingleLocation(session *Session, id string) (Location, error) {
+// returns a single device by its id
+func GetSingleDevice(session *Session, id string) (Device, error) {
 
-// 	location := Location{}
-// 	// make sure session is initialized
-// 	if !session.IsInitialized {
-// 		return location, errors.New("session is not initialized")
-// 	}
+	device := Device{}
+	// make sure session is initialized
+	if !session.IsInitialized {
+		return device, errors.New("session is not initialized")
+	}
 
-// 	// make sure you have the required environment variable
-// 	endpoint := os.Getenv("BUILDINGX_ENDPOINT")
-// 	if endpoint == "" {
-// 		return location, errors.New("missing buildingx api endpoint")
-// 	}
+	// make sure you have the required environment variable
+	endpoint := os.Getenv("BUILDINGX_ENDPOINT")
+	if endpoint == "" {
+		return device, errors.New("missing buildingx api endpoint")
+	}
 
-// 	// create the API request
-// 	path := fmt.Sprintf("locations/%s", id)
-// 	req := APIRequest{
-// 		Partition: session.Partition,
-// 		JWT:       session.JWT,
-// 		Path:      path,
-// 		Operation: GET,
-// 	}
+	// create the API request
+	path := fmt.Sprintf("devices/%s", id)
+	req := APIRequest{
+		Partition: session.Partition,
+		JWT:       session.JWT,
+		Path:      path,
+		Operation: GET,
+	}
 
-// 	// make the API call
-// 	resp, err := MakeRESTCall(req)
-// 	if err != nil {
-// 		return location, errors.New("error making REST call: " + err.Error())
-// 	}
+	// make the API call
+	resp, err := MakeRESTCall(req)
+	if err != nil {
+		return device, errors.New("error making REST call: " + err.Error())
+	}
 
-// 	// Unmarshal the native location response payload
-// 	sbLocationResponse := SBLocationResponse{}
-// 	if err := json.Unmarshal(resp, &sbLocationResponse); err != nil {
-// 		return location, errors.New("Error parsing API response. String submitted: " + string(resp))
-// 	}
+	//TODO This function has code duplication for parsing device information. consolidate with GetAllDevices, GetDevicesByLocation and GetDevicesByGateway
 
-// 	location.ID = sbLocationResponse.Location.ID
-// 	location.Description = sbLocationResponse.Location.Attributes.Description
-// 	location.Name = sbLocationResponse.Location.Attributes.Label
-// 	location.TimeZone = sbLocationResponse.Location.Attributes.TimeZone
+	// Unmarshal the native device response payload
+	sbDeviceResponse := SBDeviceResponse{}
+	if err := json.Unmarshal(resp, &sbDeviceResponse); err != nil {
+		return device, errors.New("Error parsing API response. String submitted: " + string(resp))
+	}
 
-// 	// all is well. return the location
-// 	return location, nil
-// 	//TODO: Add coordinates
-// 	//TODO: Add address
+	// Now unmarshal the device features nodes
+	sbDevicesIncludedResponse := SBDevicesIncludedResponse{}
+	if err := json.Unmarshal(resp, &sbDevicesIncludedResponse); err != nil {
+		return device, errors.New("Error parsing API response (features section). String submitted: " + string(resp))
+	}
 
-// }
+	device.ID = sbDeviceResponse.Device.ID
+	device.Model = sbDeviceResponse.Device.Attributes.ModelName
+	device.Serial = sbDeviceResponse.Device.Attributes.SerialNumber
+
+	// loop through the device features to populate the rest of the properties on the Device
+	for _, sbFeature := range sbDevicesIncludedResponse.Included {
+		// there are two kinds of devices features: DeviceInfo and Connectivity. Get the desired properties from each.
+		if sbFeature.RelationShips.HasDevice.Data.ID == device.ID {
+			if strings.ToLower(sbFeature.Type) == "deviceinfo" {
+				device.Name = sbFeature.Attributes.Name
+				device.Description = sbFeature.Attributes.Description
+			} else if strings.ToLower(sbFeature.Type) == "connectivity" {
+				device.OnlineStatus = sbFeature.Attributes.Status
+			}
+
+		}
+
+	}
+	if device.OnlineStatus == "" {
+		device.OnlineStatus = "Unknown"
+	}
+
+	// all is well. return the device
+	return device, nil
+
+}

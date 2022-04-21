@@ -98,3 +98,40 @@ func TestGetDevicesByGateway(t *testing.T) {
 	})
 	//TODO add test with invalid gateway
 }
+func TestGetSingleDevice(t *testing.T) {
+	ctx := context.Background()
+	ctx, _ = xray.BeginSegment(ctx, "TestGetSingleDevice")
+
+	// first make sure you have a partition ID (from environment variable)
+	partitionID := os.Getenv("BUILDINGX_PARTITION_ID")
+	if partitionID == "" {
+		t.Fatal("unable to find partition ID in environment variable")
+	}
+
+	// initialize the session (uses credentials to authenticate and produce a JWT)
+	session := Session{}
+	err := session.Initialize(partitionID)
+	if err != nil {
+		t.Fatal("test failed while initializing session: ", err.Error())
+	}
+
+	// Get all Devices associated with the partion and use the first one as a reference
+	devices, err := GetAllDevices(&session)
+	if err != nil {
+		t.Fatal("error getting all devices: ", err.Error())
+	}
+	if len(devices) < 1 {
+		t.Fatal("test failed because there are no valid devices to use")
+	}
+
+	// get all of the devices associated with a location
+	t.Run("get-single-device", func(t *testing.T) {
+		device, err := GetSingleDevice(&session, devices[0].ID)
+		if err != nil {
+			t.Fatal("error getting devices: ", err.Error())
+		}
+		// an empty ID on the Location object means that one was not found
+		assert.NotEmpty(t, device.ID)
+	})
+	//TODO add test with invalid gateway
+}
