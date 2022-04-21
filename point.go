@@ -5,16 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 )
 
 type Point struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	DataType    string `json:"dataType"`
-	Status      string `json:"status"`
-	StringValue string `json:"stringValue"`
-	TimeStamp   string `json:"timestamp"`
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	DataType    string    `json:"dataType"`
+	Status      string    `json:"status"`
+	StringValue string    `json:"stringValue"`
+	Timestamp   time.Time `json:"timestamp"`
 }
 type SBPointsResponse struct {
 	Points []SBPoint `json:"data"`
@@ -78,7 +79,12 @@ func GetPointsByDevice(session *Session, deviceID string) ([]Point, error) {
 		return points, errors.New("Error parsing API response. String submitted: " + string(resp))
 	}
 
+	//TODO: create a common point mapping function for this function and GetSinglePoint
 	for _, sbPoint := range sbPointsResponse.Points {
+
+		// deliberately ignoring the error here as we don't know what to do with it
+		timeStamp, _ := time.Parse(time.RFC3339, sbPoint.Attributes.PointValue.Timestamp)
+
 		point := Point{
 			ID:          sbPoint.ID,
 			Name:        sbPoint.Attributes.Name,
@@ -86,7 +92,7 @@ func GetPointsByDevice(session *Session, deviceID string) ([]Point, error) {
 			DataType:    sbPoint.Attributes.DataType,
 			Status:      sbPoint.Attributes.SystemAttributes.CurStatus,
 			StringValue: sbPoint.Attributes.PointValue.Value,
-			TimeStamp:   sbPoint.Attributes.PointValue.Timestamp,
+			Timestamp:   timeStamp,
 		}
 
 		points = append(points, point)
@@ -129,13 +135,18 @@ func GetSinglePoint(session *Session, id string) (Point, error) {
 		return point, errors.New("Error parsing API response. String submitted: " + string(resp))
 	}
 
+	// map the native point structure to our point structure
+
+	// deliberately ignoring the error here as we don't know what to do with it
+	timeStamp, _ := time.Parse(time.RFC3339, sbPointResponse.Point.Attributes.PointValue.Timestamp)
+
 	point.ID = sbPointResponse.Point.ID
 	point.Name = sbPointResponse.Point.Attributes.Name
 	point.Description = sbPointResponse.Point.Attributes.SystemAttributes.Description
 	point.DataType = sbPointResponse.Point.Attributes.DataType
 	point.Status = sbPointResponse.Point.Attributes.SystemAttributes.CurStatus
 	point.StringValue = sbPointResponse.Point.Attributes.PointValue.Value
-	point.TimeStamp = sbPointResponse.Point.Attributes.PointValue.Timestamp
+	point.Timestamp = timeStamp
 
 	// all is well. return the point
 	return point, nil

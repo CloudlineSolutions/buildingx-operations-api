@@ -137,7 +137,7 @@ func TestGetSinglePoint(t *testing.T) {
 		if err != nil {
 			t.Fatal("error getting point: ", err.Error())
 		}
-		// an empty ID on the Location object means that one was not found
+		// make sure the id of the point retrieved is the same as what was asked for
 		assert.Equal(t, points[0].ID, point.ID)
 	})
 	//TODO add test with invalid device id
