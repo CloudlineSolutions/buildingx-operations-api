@@ -16,8 +16,11 @@ type Point struct {
 	StringValue string `json:"stringValue"`
 	TimeStamp   string `json:"timestamp"`
 }
-type SBPointResponse struct {
+type SBPointsResponse struct {
 	Points []SBPoint `json:"data"`
+}
+type SBPointResponse struct {
+	Point SBPoint `json:"data"`
 }
 type SBPoint struct {
 	ID         string            `json:"id"`
@@ -70,7 +73,7 @@ func GetPointsByDevice(session *Session, deviceID string) ([]Point, error) {
 	}
 
 	// Unmarshal the native points response payload
-	sbPointsResponse := SBPointResponse{}
+	sbPointsResponse := SBPointsResponse{}
 	if err := json.Unmarshal(resp, &sbPointsResponse); err != nil {
 		return points, errors.New("Error parsing API response. String submitted: " + string(resp))
 	}
@@ -90,4 +93,51 @@ func GetPointsByDevice(session *Session, deviceID string) ([]Point, error) {
 	}
 
 	return points, nil
+}
+func GetSinglePoint(session *Session, id string) (Point, error) {
+
+	point := Point{}
+	// make sure session is initialized
+	if !session.IsInitialized {
+		return point, errors.New("session is not initialized")
+	}
+
+	// make sure you have the required environment variable
+	endpoint := os.Getenv("BUILDINGX_ENDPOINT")
+	if endpoint == "" {
+		return point, errors.New("missing buildingx api endpoint")
+	}
+
+	// create the API request
+	path := fmt.Sprintf("points/%s?field[Point]=pointValue", id)
+	req := APIRequest{
+		Partition: session.Partition,
+		JWT:       session.JWT,
+		Path:      path,
+		Operation: GET,
+	}
+
+	// make the API call
+	resp, err := MakeRESTCall(req)
+	if err != nil {
+		return point, errors.New("error making REST call: " + err.Error())
+	}
+
+	// Unmarshal the native point response payload
+	sbPointResponse := SBPointResponse{}
+	if err := json.Unmarshal(resp, &sbPointResponse); err != nil {
+		return point, errors.New("Error parsing API response. String submitted: " + string(resp))
+	}
+
+	point.ID = sbPointResponse.Point.ID
+	point.Name = sbPointResponse.Point.Attributes.Name
+	point.Description = sbPointResponse.Point.Attributes.SystemAttributes.Description
+	point.DataType = sbPointResponse.Point.Attributes.DataType
+	point.Status = sbPointResponse.Point.Attributes.SystemAttributes.CurStatus
+	point.StringValue = sbPointResponse.Point.Attributes.PointValue.Value
+	point.TimeStamp = sbPointResponse.Point.Attributes.PointValue.Timestamp
+
+	// all is well. return the point
+	return point, nil
+
 }

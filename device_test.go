@@ -131,7 +131,7 @@ func TestGetSingleDevice(t *testing.T) {
 			t.Fatal("error getting devices: ", err.Error())
 		}
 		// an empty ID on the Location object means that one was not found
-		assert.NotEmpty(t, device.ID)
+		assert.Equal(t, devices[0].ID, device.ID)
 	})
 	//TODO add test with invalid gateway
 }
