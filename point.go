@@ -42,6 +42,27 @@ type SBPointValue struct {
 	Timestamp string `json:"timestamp"`
 }
 
+type PointHistory struct {
+	Value     string `json:"value"`
+	Timestamp string `json:"timestamp"`
+}
+type SBPointHistoryResponse struct {
+	Data []SBPointHistory `json:"data"`
+}
+type SBPointHistory struct {
+	Attributes SBPointHistoryAttributes `json:"attributes"`
+}
+type SBPointHistoryAttributes struct {
+	Value     string `json:"value"`
+	Timestamp string `json:"timestamp"`
+}
+
+type PointHistoryRequest struct {
+	Point Point
+	Start time.Time
+	End   time.Time
+}
+
 // returns an array of points that are associated with a particular device
 func GetPointsByDevice(session *Session, deviceID string) ([]Point, error) {
 
@@ -150,5 +171,50 @@ func GetSinglePoint(session *Session, id string) (Point, error) {
 
 	// all is well. return the point
 	return point, nil
+
+}
+func GetPointHistory(session Session, point *Point, start, end time.Time) ([]PointHistory, error) {
+
+	history := make([]PointHistory, 0)
+
+	// make sure you have the required environment variable
+	endpoint := os.Getenv("BUILDINGX_ENDPOINT")
+	if endpoint == "" {
+		return history, errors.New("missing buildingx api endpoint")
+	}
+
+	// create the API request
+	path := fmt.Sprintf("points/%s/values?filter[timestamp][from]=%s&[timestamp][to]=%s", point.ID, start.Format(time.RFC3339), end.Format(time.RFC3339))
+	req := APIRequest{
+		Partition: session.Partition,
+		JWT:       session.JWT,
+		Path:      path,
+		Operation: GET,
+	}
+
+	// make the API call
+	resp, err := MakeRESTCall(req)
+	if err != nil {
+		return history, errors.New("error making REST call: " + err.Error())
+	}
+
+	// Unmarshal the native point response payload
+	sbPointHistoryResponse := SBPointHistoryResponse{}
+	if err := json.Unmarshal(resp, &sbPointHistoryResponse); err != nil {
+		return history, errors.New("Error parsing API response. String submitted: " + string(resp))
+	}
+
+	for _, sbHistory := range sbPointHistoryResponse.Data {
+
+		pointHistory := PointHistory{
+			Value:     sbHistory.Attributes.Value,
+			Timestamp: sbHistory.Attributes.Timestamp,
+		}
+
+		history = append(history, pointHistory)
+
+	}
+
+	return history, nil
 
 }
