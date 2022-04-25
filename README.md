@@ -42,7 +42,7 @@ The device object represents either a logical or physical device installed at a 
 | OnlineStatus | String | The online status of the device. Possible values are "online", "offline" or "unknown"
 
 ### Point
-This point object represents a logical or physical point residing on a device.
+The point object represents a logical or physical point residing on a device.
 | Name  | Type | Description |
 | ---   | ---   | --- |
 | ID | String | The unique identifier for the point
@@ -55,14 +55,89 @@ This point object represents a logical or physical point residing on a device.
 
 
 ### PointHistory
+The point history object represents a single record in the history of a point.
+| Name  | Type | Description |
+| ---   | ---   | --- |
+| Timestamp | Time | A timestamp for when the record was created
+| Value | String | The value for the record
 
 ## Required Environment Variables
 
 | Name  | Description |
 | ---   | --- |
+| BUILDINGX_CLIENT_ID | The client ID credential for the Operations API.  |
+| BUILDINGX_CLIENT_SECRET | The client secret credential for the Operations API. |
+| BUILDINGX_AUDIENCE | An authentication service property. Normally this has a value of https://horizon.siemens.com |
+| BUILDINGX_ENDPOINT | An authentication service property. Normally this has a value of https://api.bpcloud.siemens.com |
+| BUILDINGX_AUTH_URL | An authentication service property. Normally this has a value of https://siemens-bt-015.eu.auth0.com/oauth/token |
+| BUILDINGX_PARTITION_ID | This environment variable holds a partition ID and is used for running the integration tests but is not required for the use of the library in a project. |
 
 
 ## Example Usage
+The following example code (in Golang) shows a complete set of operations, ending in setting a point value. It does not include all available functions, but it gives you a good idea for how to use the library.
+
+The sequence assumes that the first location associated with the partition has a gateway with at least one device under it, with the device having at least one writable point (a boolean in this example).
+
+```
+
+    // initialize the session (uses credentials and other properties stored in environment variables)
+    // your partition ID is provided when you set up your account in the SBT cloud portal
+    partitionID := "{your partition id goes here}"
+	session := Session{}
+	err := session.Initialize(partitionID)
+	if err != nil {
+		// handle the error
+	}
+
+    // get all locations for the partition
+    locations, err := GetLocations(&session)
+	if err != nil {
+		// handle the error
+	}
+    
+    // Get all devices associated with the first location 
+	devices, err := GetDevicesByLocation(&session, &locations[0])
+	if err != nil {
+		// handle the error
+	}
+
+    // find the gateway (X300 or X200).
+	gatewayID := ""
+	for _, device := range devices {
+		if strings.ToLower(device.Model) == "x300" || strings.ToLower(device.Model) == "x200" {
+			gatewayID = device.ID
+			break
+		}
+	}
+
+    // get the devices under a gateway
+	gatewayDevices, err := GetDevicesByGateway(&session, gatewayID)
+	if err != nil {
+		// handle the error
+	}
+
+    // get the points associated with the first device under the gateway
+	points, err := GetPointsByDevice(&session, &gatewayDevices[0])
+	if err != nil {
+		// handle the error
+	}
+
+    // get a writable point
+	writablePoint := Point{}
+	for _, p := range points {
+		if p.Writable {
+			writablePoint = p
+		}
+	}
+
+    // command the writable point - this example assumes a boolean type
+    err := CommandPointValue(&session, &writablePoint, "true")
+	if err != nil {
+		// handle the error
+	}
+
+
+```
 
 ## Things to Know
 - only point value is settable
@@ -70,6 +145,6 @@ This point object represents a logical or physical point residing on a device.
 ## Integration Tests
 
 
-## Known Issues
+## Known Issues & Limitations
 
 - Certain data is missing when retrieving a single Device object from the Building X Operations API. Specifically, the Name, Description and OnlineStatus properties of the Device object returned from GetSingleDevice() will be missing until the underlying API issue is resolved.
