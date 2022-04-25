@@ -38,12 +38,12 @@ func TestGetDevicesByLocation(t *testing.T) {
 	}
 
 	t.Run("get-devices-with-valid-location-id", func(t *testing.T) {
-		devices, err := GetDevicesByLocation(&session, locations[0].ID)
+		devices, err := GetDevicesByLocation(&session, &locations[0])
 		if err != nil {
 			t.Fatal("error getting devices: ", err.Error())
 		}
 		// an empty ID on the Location object means that one was not found
-		assert.GreaterOrEqual(t, 1, len(devices))
+		assert.GreaterOrEqual(t, len(devices), 1)
 	})
 	//TODO add test with invalid location
 }
@@ -94,7 +94,7 @@ func TestGetDevicesByGateway(t *testing.T) {
 			t.Fatal("error getting devices: ", err.Error())
 		}
 		// an empty ID on the Location object means that one was not found
-		assert.GreaterOrEqual(t, 1, len(devices))
+		assert.GreaterOrEqual(t, len(devices), 1)
 	})
 	//TODO add test with invalid gateway
 }

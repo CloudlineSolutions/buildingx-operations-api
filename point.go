@@ -82,7 +82,7 @@ type SBPointCommandPointValue struct {
 }
 
 // returns an array of points that are associated with a particular device
-func GetPointsByDevice(session *Session, deviceID string) ([]Point, error) {
+func GetPointsByDevice(session *Session, device *Device) ([]Point, error) {
 
 	points := make([]Point, 0)
 
@@ -98,7 +98,7 @@ func GetPointsByDevice(session *Session, deviceID string) ([]Point, error) {
 	}
 
 	// create the API request
-	path := fmt.Sprintf("devices/%s/points?field[Point]=pointValue", deviceID)
+	path := fmt.Sprintf("devices/%s/points?field[Point]=pointValue", device.ID)
 	req := APIRequest{
 		Partition: session.Partition,
 		JWT:       session.JWT,
@@ -236,7 +236,7 @@ func CommandPointValue(session *Session, point *Point, value string) error {
 	return nil
 
 }
-func GetPointHistory(session Session, point *Point, start, end time.Time) ([]PointHistory, error) {
+func GetPointHistory(session *Session, point *Point, start, end time.Time) ([]PointHistory, error) {
 
 	history := make([]PointHistory, 0)
 

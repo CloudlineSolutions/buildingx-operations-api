@@ -63,7 +63,7 @@ func TestGetPoints(t *testing.T) {
 
 	// get all of the points associated with the device under a gateway
 	t.Run("get-points-with-valid-device-id", func(t *testing.T) {
-		points, err := GetPointsByDevice(&session, gatewayDevices[0].ID)
+		points, err := GetPointsByDevice(&session, &gatewayDevices[0])
 		if err != nil {
 			t.Fatal("error getting points: ", err.Error())
 		}
@@ -123,7 +123,7 @@ func TestGetSinglePoint(t *testing.T) {
 	}
 
 	// now get the points
-	points, err := GetPointsByDevice(&session, gatewayDevices[0].ID)
+	points, err := GetPointsByDevice(&session, &gatewayDevices[0])
 	if err != nil {
 		t.Fatal("error getting points: ", err.Error())
 	}
@@ -194,7 +194,7 @@ func TestCommandPoint(t *testing.T) {
 	}
 
 	// now get the points
-	points, err := GetPointsByDevice(&session, gatewayDevices[0].ID)
+	points, err := GetPointsByDevice(&session, &gatewayDevices[0])
 	if err != nil {
 		t.Fatal("error getting points: ", err.Error())
 	}
@@ -272,7 +272,7 @@ func TestGetPointHistory(t *testing.T) {
 	}
 
 	// now get the points
-	points, err := GetPointsByDevice(&session, gatewayDevices[0].ID)
+	points, err := GetPointsByDevice(&session, &gatewayDevices[0])
 	if err != nil {
 		t.Fatal("error getting points: ", err.Error())
 	}
@@ -287,7 +287,7 @@ func TestGetPointHistory(t *testing.T) {
 		// retrieve from 30 days ago
 		start := time.Now().UTC().Add(-720 * time.Hour)
 
-		history, err := GetPointHistory(session, &points[0], start, time.Now().UTC())
+		history, err := GetPointHistory(&session, &points[0], start, time.Now().UTC())
 		if err != nil {
 			t.Fatal("error getting point: ", err.Error())
 		}

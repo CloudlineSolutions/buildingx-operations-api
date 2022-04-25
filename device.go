@@ -67,7 +67,7 @@ type SBDeviceIncludedRelationshipsData struct {
 }
 
 // returns an array of devices that are associated with a particular location
-func GetDevicesByLocation(session *Session, locationID string) ([]Device, error) {
+func GetDevicesByLocation(session *Session, location *Location) ([]Device, error) {
 
 	devices := make([]Device, 0)
 
@@ -83,7 +83,7 @@ func GetDevicesByLocation(session *Session, locationID string) ([]Device, error)
 	}
 
 	// create the API request
-	path := fmt.Sprintf("devices?include=hasFeatures.DeviceInfo,hasFeatures.Connectivity&filter[hasLocation.data.id]=%s", locationID)
+	path := fmt.Sprintf("devices?include=hasFeatures.DeviceInfo,hasFeatures.Connectivity&filter[hasLocation.data.id]=%s", location.ID)
 	req := APIRequest{
 		Partition: session.Partition,
 		JWT:       session.JWT,
