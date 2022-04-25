@@ -13,6 +13,7 @@ type Point struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	DataType    string    `json:"dataType"`
+	Writable    bool      `json:"writable"`
 	Status      string    `json:"status"`
 	StringValue string    `json:"stringValue"`
 	Timestamp   time.Time `json:"timestamp"`
@@ -36,6 +37,7 @@ type SBPointAttributes struct {
 type SBPointSystemAttributes struct {
 	CurStatus   string `json:"curStatus"`
 	Description string `json:"description"`
+	Writable    string `json:"writable"`
 }
 type SBPointValue struct {
 	Value     string `json:"value"`
@@ -105,12 +107,18 @@ func GetPointsByDevice(session *Session, deviceID string) ([]Point, error) {
 
 		// deliberately ignoring the error here as we don't know what to do with it
 		timeStamp, _ := time.Parse(time.RFC3339, sbPoint.Attributes.PointValue.Timestamp)
+		writableString := sbPoint.Attributes.SystemAttributes.Writable
+		writable := false
+		if writableString == "m:" {
+			writable = true
+		}
 
 		point := Point{
 			ID:          sbPoint.ID,
 			Name:        sbPoint.Attributes.Name,
 			Description: sbPoint.Attributes.SystemAttributes.Description,
 			DataType:    sbPoint.Attributes.DataType,
+			Writable:    writable,
 			Status:      sbPoint.Attributes.SystemAttributes.CurStatus,
 			StringValue: sbPoint.Attributes.PointValue.Value,
 			Timestamp:   timeStamp,
@@ -160,11 +168,17 @@ func GetSinglePoint(session *Session, id string) (Point, error) {
 
 	// deliberately ignoring the error here as we don't know what to do with it
 	timeStamp, _ := time.Parse(time.RFC3339, sbPointResponse.Point.Attributes.PointValue.Timestamp)
+	writableString := sbPointResponse.Point.Attributes.SystemAttributes.Writable
+	writable := false
+	if writableString == "m:" {
+		writable = true
+	}
 
 	point.ID = sbPointResponse.Point.ID
 	point.Name = sbPointResponse.Point.Attributes.Name
 	point.Description = sbPointResponse.Point.Attributes.SystemAttributes.Description
 	point.DataType = sbPointResponse.Point.Attributes.DataType
+	point.Writable = writable
 	point.Status = sbPointResponse.Point.Attributes.SystemAttributes.CurStatus
 	point.StringValue = sbPointResponse.Point.Attributes.PointValue.Value
 	point.Timestamp = timeStamp
