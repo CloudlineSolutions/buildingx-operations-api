@@ -25,10 +25,14 @@ The session object holds key information need by every call to the Building X AP
 The location object represents a physical location where one or more Building X compatible devices are installed.
 | Name  | Type | Description |
 | ---   | ---   | --- |
-| ID | String | The unique identifier for the location
-| Name | String | The name of the location
-| Description | String | A description for the location
-| TimeZone | String | The timezone of the location
+| ID | String | The unique identifier for the location |
+| Name | String | The name of the location |
+| Description | String | A description for the location |
+| Street | String | The street address of the location |
+| City | String | The city name of the location |
+| PostalCode | String | The location postal code |
+| Country | String | The country code for the location |
+| TimeZone | String | The timezone of the location |
 
 ### Device
 The device object represents either a logical or physical device installed at a location.
@@ -49,6 +53,7 @@ The point object represents a logical or physical point residing on a device.
 | Name | String | The name of the point
 | Description | String | A description of the point
 | DataType | String | The data type of the point. Possible values are "boolean", "string" or "number".
+| Writable | Boolean | Indicates whether or not the point can be commanded.
 | Status | String | Indicates the status of the point. Possible values are "ok" or "fail". 
 | StringValue | String | The value of the point, represented as a string.
 | Timestamp | Time | The date and time the point was last updated.
