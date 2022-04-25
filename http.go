@@ -52,8 +52,13 @@ func MakeRESTCall(apiReq APIRequest) ([]byte, error) {
 	client := &http.Client{Timeout: time.Duration(20) * time.Second}
 	req, _ := http.NewRequest(string(apiReq.Operation), url, &apiReq.Body)
 	req.Header.Add("accept", "application/json")
-	req.Header.Add("content-type", "application/json")
 	req.Header.Add("Authorization", auth)
+
+	if apiReq.Operation == PATCH {
+		req.Header.Add("content-type", "application/vnd.api+json")
+	} else {
+		req.Header.Add("content-type", "application/json")
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -61,7 +66,7 @@ func MakeRESTCall(apiReq APIRequest) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 204 {
 		// attempt to parse the error response message
 		errorResponse, err := ioutil.ReadAll(resp.Body)
 		if err != nil {

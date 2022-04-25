@@ -1,6 +1,7 @@
 package buildingx
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -63,6 +64,21 @@ type PointHistoryRequest struct {
 	Point Point
 	Start time.Time
 	End   time.Time
+}
+
+// Structs required for Point commanding
+type SBPointCommand struct {
+	Data SBPointCommandData `json:"data"`
+}
+type SBPointCommandData struct {
+	ID         string                   `json:"id"`
+	Attributes SBPointCommandAttributes `json:"attributes"`
+}
+type SBPointCommandAttributes struct {
+	PointValue SBPointCommandPointValue `json:"pointValue"`
+}
+type SBPointCommandPointValue struct {
+	Value string `json:"value"`
 }
 
 // returns an array of points that are associated with a particular device
@@ -185,6 +201,39 @@ func GetSinglePoint(session *Session, id string) (Point, error) {
 
 	// all is well. return the point
 	return point, nil
+
+}
+func CommandPointValue(session *Session, point *Point, value string) error {
+
+	if !point.Writable {
+		return errors.New("point is not writable")
+	}
+
+	command := SBPointCommand{}
+	command.Data.ID = point.ID
+	command.Data.Attributes.PointValue.Value = value
+
+	requestBytes, _ := json.Marshal(command)
+	request := bytes.NewReader(requestBytes)
+
+	// create the API request
+	path := fmt.Sprintf("points/%s?field[Point]=pointValue", point.ID)
+	req := APIRequest{
+		Partition: session.Partition,
+		JWT:       session.JWT,
+		Path:      path,
+		Operation: PATCH,
+		Body:      *request,
+	}
+
+	// make the API call
+	_, err := MakeRESTCall(req)
+	if err != nil {
+		return errors.New("error making REST call: " + err.Error())
+	}
+
+	// all is well
+	return nil
 
 }
 func GetPointHistory(session Session, point *Point, start, end time.Time) ([]PointHistory, error) {
