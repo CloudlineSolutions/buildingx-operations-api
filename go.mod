@@ -1,4 +1,4 @@
-module cloudline/siemens-buildingx
+module cloudline/buildingx-operations-api
 
 go 1.17
 
