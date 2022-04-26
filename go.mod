@@ -1,4 +1,4 @@
-module github.com/cloudline-solutions/buildingx-operations-api
+module github.com/cloudlinesolutions/buildingx-operations-api
 
 go 1.17
 
