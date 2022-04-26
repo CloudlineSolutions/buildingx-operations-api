@@ -27,7 +27,7 @@ func TestGetDevicesByLocation(t *testing.T) {
 		t.Fatal("test failed while initializing session: ", err.Error())
 	}
 
-	// get the location collection to use in fetching a single valid location
+	// get the location collection to use in fetching a single device by location
 	// If there are no locations, this will fail
 	locations, err := GetLocations(&session)
 	if err != nil {
@@ -42,10 +42,22 @@ func TestGetDevicesByLocation(t *testing.T) {
 		if err != nil {
 			t.Fatal("error getting devices: ", err.Error())
 		}
-		// an empty ID on the Location object means that one was not found
+		// we should have gotten at least one device
 		assert.GreaterOrEqual(t, len(devices), 1)
 	})
-	//TODO add test with invalid location
+	t.Run("get-devices-with-invalid-location-id", func(t *testing.T) {
+
+		badLocation := Location{
+			ID: "invalid-id",
+		}
+		devices, err := GetDevicesByLocation(&session, &badLocation)
+		if err != nil {
+			t.Fatal("error getting devices: ", err.Error())
+		}
+		// we should have gotten no devices
+		assert.Equal(t, 0, len(devices))
+	})
+
 }
 func TestGetDevicesByGateway(t *testing.T) {
 	ctx := context.Background()
@@ -82,21 +94,26 @@ func TestGetDevicesByGateway(t *testing.T) {
 			break
 		}
 	}
-
 	if gatewayID == "" {
 		t.Fatal("could not find a valid gateway in the device collection")
 	}
 
-	// get all of the devices associated with a location
 	t.Run("get-devices-with-valid-gateway-id", func(t *testing.T) {
 		devices, err := GetDevicesByGateway(&session, gatewayID)
 		if err != nil {
 			t.Fatal("error getting devices: ", err.Error())
 		}
-		// an empty ID on the Location object means that one was not found
+		// we should have gotten at least one device
 		assert.GreaterOrEqual(t, len(devices), 1)
 	})
-	//TODO add test with invalid gateway
+	t.Run("get-devices-with-invalid-gateway-id", func(t *testing.T) {
+		gatewayID = "invalid-id"
+		_, err := GetDevicesByGateway(&session, gatewayID)
+
+		// The Building X API returns a 404 error when the device ID is invalid
+		assert.NotNil(t, err)
+	})
+
 }
 func TestGetSingleDevice(t *testing.T) {
 	ctx := context.Background()
@@ -124,7 +141,6 @@ func TestGetSingleDevice(t *testing.T) {
 		t.Fatal("test failed because there are no valid devices to use")
 	}
 
-	// get all of the devices associated with a location
 	t.Run("get-single-device", func(t *testing.T) {
 		device, err := GetSingleDevice(&session, devices[0].ID)
 		if err != nil {
@@ -133,5 +149,11 @@ func TestGetSingleDevice(t *testing.T) {
 		// an empty ID on the Location object means that one was not found
 		assert.Equal(t, devices[0].ID, device.ID)
 	})
-	//TODO add test with invalid gateway
+	t.Run("get-single-device-with-invalid-id", func(t *testing.T) {
+		deviceID := "invalid-id"
+		_, err := GetSingleDevice(&session, deviceID)
+
+		// The Building X API returns a 404 error when the device ID is invalid
+		assert.NotNil(t, err)
+	})
 }

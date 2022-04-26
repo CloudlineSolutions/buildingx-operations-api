@@ -68,7 +68,7 @@ func TestGetPoints(t *testing.T) {
 		// an empty ID on the Location object means that one was not found
 		assert.GreaterOrEqual(t, len(points), 1)
 	})
-	//TODO add test with invalid device id
+
 }
 func TestGetSinglePoint(t *testing.T) {
 	ctx := context.Background()
@@ -139,7 +139,7 @@ func TestGetSinglePoint(t *testing.T) {
 		// make sure the id of the point retrieved is the same as what was asked for
 		assert.Equal(t, points[0].ID, point.ID)
 	})
-	//TODO add test with invalid device id
+
 }
 func TestCommandPoint(t *testing.T) {
 	ctx := context.Background()
@@ -292,5 +292,5 @@ func TestGetPointHistory(t *testing.T) {
 		// make sure the id of the point retrieved is the same as what was asked for
 		assert.GreaterOrEqual(t, len(history), 1)
 	})
-	//TODO add test with invalid device id
+
 }

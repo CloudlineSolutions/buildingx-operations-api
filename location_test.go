@@ -31,6 +31,7 @@ func TestGetLocations(t *testing.T) {
 		if err != nil {
 			t.Fatal("error getting locations: ", err.Error())
 		}
+		// we should get at least one location
 		assert.GreaterOrEqual(t, 1, len(locations))
 	})
 	t.Run("get-locations-with-invalid-partition", func(t *testing.T) {
