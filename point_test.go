@@ -46,7 +46,6 @@ func TestGetPoints(t *testing.T) {
 			break
 		}
 	}
-
 	if gatewayID == "" {
 		t.Fatal("could not find a valid gateway in the device collection")
 	}
@@ -56,7 +55,6 @@ func TestGetPoints(t *testing.T) {
 	if err != nil {
 		t.Fatal("error getting devices under the gateway: ", err.Error())
 	}
-
 	if len(gatewayDevices) < 1 {
 		t.Fatal("no devices found under the gateway")
 	}
