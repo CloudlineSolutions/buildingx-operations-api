@@ -142,7 +142,6 @@ The sequence assumes that the first location associated with the partition has a
 		// handle the error
 	}
 
-
 ```
 
 ## Things to Know
