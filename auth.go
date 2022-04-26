@@ -63,7 +63,6 @@ func GetToken() (string, error) {
 	req.Header.Add("accept", "application/json")
 	req.Header.Add("content-type", "application/json")
 
-	//TODO: Replace this code with a call to the standard http method
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("unexpected error while invoking http client: %s", err.Error())
